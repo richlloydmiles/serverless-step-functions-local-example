@@ -1,0 +1,63 @@
+service: stepfunctions
+
+frameworkVersion: '2'
+
+plugins:
+  - serverless-step-functions-local
+  - serverless-step-functions
+  - serverless-offline-lambda
+  - serverless-offline
+
+custom:
+  serverless-offline:
+  stepFunctionsLocal:
+    accountId: 101010101010
+    region: us-east-1
+    TaskResourceMapping:
+      FirstState: arn:aws:lambda:us-east-1:101010101010:function:hello
+      second_task: arn:aws:lambda:us-east-1:101010101010:function:there
+      FinalState: arn:aws:lambda:us-east-1:101010101010:function:world
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+
+functions:
+  hello:
+    handler: handler.hello
+  world:
+    handler: handler.world
+  there:
+    handler: handler.there
+  startSF:
+    handler: handler.startSF
+    events:
+      - http:
+          path: hello
+          method: GET
+
+stepFunctions:
+  stateMachines:
+    WaitMachine:
+      definition:
+        Comment: "An example of the Amazon States Language using wait states"
+        StartAt: FirstState
+        States:
+          FirstState:
+            Type: Parallel
+            End: true
+            Branches:
+              - StartAt: second_task
+                States:
+                  second_task:
+                    Type: Task
+                    Resource: 
+                      Fn::GetAtt: [there, Arn]
+                    End: true
+              - StartAt: FinalState
+                States:
+                  FinalState:
+                    Type: Task
+                    Resource: 
+                      Fn::GetAtt: [world, Arn]
+                    End: true
