@@ -8,6 +8,6 @@
 - `npm install`
 - `npm run start`
 
-## Remove state machine
+## Delete state machine
 
 - `npm run delete`
